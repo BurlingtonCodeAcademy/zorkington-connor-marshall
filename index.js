@@ -14,7 +14,7 @@ function ask(questionText) {
 //same for room features
 //add hunger status to user
 
-class Room {
+class Room {   //lets us make new room objects with <new>, fill out each section in order separated by commas
   constructor(
     descriptions,
     items,
@@ -31,7 +31,7 @@ class Room {
     this.error = errorStatement;
   }
 }
-class Thing {
+class Thing { // creates new objects both immovable and ones the player can pick up.
   constructor(name, altNames, description, pickUpText, takeable) {
     this.name = name;
     this.altNames = altNames;
@@ -40,19 +40,20 @@ class Thing {
     this.takeable = takeable;
   }
 }
-let puzzles = {
-  keyCode: function keyCode(code) {
-    console.log(code + "25");
-    if (code === "12345" && mainSt.connections != "foyer") {
-      mainSt.connections.push("foyer");
-      console.log("the door unlocked");
-    } else if (mainSt.connections == "foyer") {
+let puzzles = { 
+  keyCode: function keyCode(code) { //keycode puzzle could use improvement right now "USE 12345" works and nothing else
+    if (code === "12345" && mainst.connections != "foyer") {
+      mainst.connections.push("foyer");
+      console.log(
+        " Success! The door opens. You enter the foyer and the door shuts behind you."
+      );
+      user.actions.move("foyer");
+    } else if (mainst.connections == "foyer") {
       console.log("the door is already unlocked");
     } else {
       console.log("BZZZZ wrong code");
     }
   },
-  testPuzzle: function() {}
 };
 ///things////
 let paper = new Thing(
@@ -79,7 +80,8 @@ let sign = new Thing(
 );
 
 ////rooms/////
-let mainSt = new Room(
+///TODO rooms should be reworked so more commands work including directions. right now you have to call the name exactly.
+let mainst = new Room(
   `182 Main St.
 You are standing on Main Street between Church and South Winooski.
 There is a door here. A keypad sits on the handle.
@@ -87,11 +89,6 @@ On the door is a handwritten sign.\n`,
   [paper, sign],
   puzzles.keyCode,
   [],
-  {
-    sign:
-      "Welcome to Burlington Code Academy! Come on up to the third floor. If the door is locked, use the code 12345.",
-    door: "The door is locked. There is a keypad on the door handle."
-  }
 );
 // after entering keyCode, PC enters the foyer
 let foyer = new Room(
@@ -99,14 +96,13 @@ let foyer = new Room(
 You find yourself in the stairwell- or "foyer" as it is known in some cultures. 
 As you think of the word "foyer" you smile to yourself and compliment your refined cultural pallete, "Go, me!" you think. 
 Taking a mental inventory of your surroundings, you notice a copy of the 'Seven Days' newspaper folded up in the corner`,
-  sevenDays,
+  [sevenDays],
   null,
-  ["mainSt", "upstairs"],
+  ["mainst", "upstairs"],
   ""
 );
 // assuming PC has grabbed the newspaper, they have the choice to head upstairs
 
-//console.log(foyer);
 
 // from the foyer, PC has the option to walk upstairs- this is the path to progression. PC can go back outside, but that'd be silly.
 let upstairs = new Room(
@@ -148,7 +144,8 @@ let classroom = new Room(
   `Classroom.
 You open the door to the classroom and walk in. 
 You are standing in the classroom.
-Joshua is presenting a lecture to the class...`["chair"],
+Joshua is presenting a lecture to the class...`,
+["chair"],
   null,
   ["upstairs"]
 );
@@ -161,10 +158,11 @@ let mrMikes = new Room(
   The counterperson welcomes you and awaits your response...`,
   ["counterperson", "pizza"],
   null,
-  ["mainSt"]
+  ["mainst"]
 );
 
-//////////////////////////////////////////
+////////LOOKUP TABLES//////////////
+//these let use search for keywords adding flexibility
 const acceptbleCommands = {
   move: ["go", "move", "walk", "head", "proceed", "continue"],
   take: ["take", "pick up", "grab"],
@@ -185,11 +183,12 @@ const acceptbleCommands = {
   activateExternal: ["open", "talk", "speak", "buy", "read"],
   checkIventory: ["inventory", "check inventory", "i"],
   drop: ["drop"],
-  use: ["use"]
+  use: ["use"],
+  help: ["help"]
 };
 
-const roomLookup = {
-  mainSt: mainSt,
+const roomLookup = { //keys on left are strings and values on right are room objects. makes the current room a useable trait
+  mainst: mainst,
   foyer: foyer,
   upstairs: upstairs,
   bathroom: bathroom,
@@ -197,32 +196,33 @@ const roomLookup = {
   classroom: classroom,
   mrMikes: mrMikes
 };
-
+ ////USER////////
 let user = {
   inventory: [],
-  currentRoom: "mainSt",
-  actions: {
-    take(input) {
-      //delete from roomInventory and push to PC inventory
-      roomLookup[user.currentRoom].roomInventory.forEach(obj => {
-        let found = obj.altNames.find(item => item === input)
+  currentRoom: "mainst",
+  actions: {  //add new actions here in user
+    take(input) { 
+      //TODO create error if you cant find item. right now it just restarts without saying anything. issue with closer scope in loop.
+      roomLookup[user.currentRoom].roomInventory.forEach(obj => { ///takes current rooms inventory and searches each item for keyword and then take-ability
+        let found = obj.altNames.find(item => item === input);
         if (found) {
-          if (obj.takeable ===true){
-          user.inventory.push(obj);
-          console.log(obj.pickUpText);
-          roomLookup[user.currentRoom].roomInventory = roomLookup[
-            user.currentRoom
-          ].roomInventory.filter(newobj => newobj != obj); //function used multiple times
-          return;
-        }else{
-          console.log(obj.pickUpText)
-          return
-        }
+          if (obj.takeable === true) {  //adds the item to the player inventory and then removes it from the room
+            user.inventory.push(obj);
+            console.log(obj.pickUpText);
+            roomLookup[user.currentRoom].roomInventory = roomLookup[
+              user.currentRoom
+            ].roomInventory.filter(newobj => newobj != obj); //function used multiple times
+            return;
+          } else {
+            console.log(obj.pickUpText);//pick up text prints what happens when you try to pick up an item. values stored in item objects 
+            return;
+          }
         }
       });
     },
     drop(input) {
       //delete from PC inventory and push to roomInventory.
+      //same as take but reversed
       user.inventory.forEach(obj => {
         let found = obj.altNames.find(item => item === input);
         if (found) {
@@ -233,19 +233,18 @@ let user = {
         }
       });
     },
-    use(input) {
+    use(input) { //only involved with puzzles. no use for items in inventory yet so fine for now
       roomLookup[user.currentRoom].puzzles(input);
-      //use item or object?
     },
     move(input) {
       // move to new room
-      if (input === undefined) {
+      if (input === undefined) { //prompts the user to give a destination
         console.log("move where?");
         return;
       }
       let found = roomLookup[user.currentRoom].connections.find(
         room => room === input
-      );
+      ); // checks if you can move to desired location. right now names need to be exact. need improvement TODO
       if (input === found) {
         user.currentRoom = found;
         console.log(`You moved to ${user.currentRoom}`);
@@ -256,17 +255,23 @@ let user = {
       }
     },
     checkIventory() {
-      console.log(user.inventory);
+      user.inventory.forEach(item => {
+
+        console.log(`You are carrying:\n${item.name}:\n${item.description}\n`); //prints everything in user inventory with descriptions
+      });
       return;
     },
     activateExternal(input) {
-      console.log(roomLookup[user.currentRoom].things.sign);
+      console.log(roomLookup[user.currentRoom].things[input]); //looks up description of a thing and prints it best way to tell a story with LOOK
+    },
+    help(){
+      console.log("You can MOVE TAKE DROP USE or LOOK") //TODO prints possible actions needs improvement
     }
   }
 };
-
+////main function runs game in loop taking user input
 async function action() {
-  let input = await ask(roomLookup[user.currentRoom].description);
+  let input = await ask("\n"+roomLookup[user.currentRoom].description+"\n");
   checkValidInput(input);
   ///////TEST STUFF HERE//////
   return action();
@@ -274,19 +279,18 @@ async function action() {
 action();
 
 function checkValidInput(userInput) {
-  input = userInput.toLowerCase();
+  input = userInput.toLowerCase(); //convert everything to lower case
   let inputArr = input.split(" "); //separate action from input
-  let action = inputArr[0];
+  let action = inputArr[0];         //TODO only can use two words and the first word has to be a one word action. needs improvement
   let directive = inputArr[1];
   for (let action2 in acceptbleCommands) {
     // action2 are the true actions found is the user input
-    let found = acceptbleCommands[action2].find(action3 => action3 === action);
+    let found = acceptbleCommands[action2].find(action3 => action3 === action); //checks possible names for an action and converts it into something usable
     if (found) {
-      user.actions[action2](directive);
+      user.actions[action2](directive); //calls action with directive as input all the actions use the value from directive
       return;
     }
   }
-  console.log(`Sorry, I don't know how to ${action}.`);
+  console.log(`Sorry, I don't know how to ${action}.`);   //prints if there is no action for input
   return;
 }
-/////////stuff to go into objects/////
