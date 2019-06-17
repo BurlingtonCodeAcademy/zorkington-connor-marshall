@@ -70,7 +70,7 @@ let meth = new Thing(
 );
 
 let sevenDays = new Thing(
-  "sevenDays",
+  "sevendays",
   ["sevendays", "seven days", "tabloid", "old persons iphone", "news paper"],
   "A copy of Seven Days, Vermont's Alt-Weekly",
   "You pick up the paper and leaf through it looking for comics and ignoring the articles, just like everybody else does.",
@@ -123,6 +123,12 @@ let pizza = new Thing(
   "You take the slice of pizza.",
   true
 );
+let counterperson = new Thing(
+  "counterperson",
+  ["counterperson", "person", "dude"],
+  "guy",
+  false
+);
 
 ////rooms/////
 ///TODO rooms should be reworked so more commands work including directions. right now you have to call the name exactly.
@@ -135,7 +141,7 @@ There is a door here. A keypad sits on the handle.
 On the door is a handwritten sign.\n`,
   { sign, door },
   puzzles.keyCode,
-  []
+  ["mrmikes"]
 );
 // after entering keyCode, PC enters the foyer
 let foyer = new Room(
@@ -180,7 +186,7 @@ let balcony = new Room(
 You walk through the door leading to the balcony. 
 You are standing outside. Your classmate Connor is puffing on his Juul. 
 You notice TA Bob's hat laying on the ground...`,
-  // {bobsHat, connor},
+  {bobsHat, connor},
   null,
   ["upstairs"]
 );
@@ -191,25 +197,25 @@ let classroom = new Room(
 You open the door to the classroom and walk in. 
 You are standing in the classroom.
 Joshua is presenting a lecture to the class...`,
-  //{chair},
+  {chair},
   null,
   ["upstairs"]
 );
 
-//
-let mrMikes = new Room(
+
+let mrmikes = new Room(
   `You walk down the street heading east towards VCET.
   You arrive at the entrace to Mr. Mikes Pizza and walk in.
   The thick aroma of gluten and mozzarella fills your nostrils as you walk up to the counter.
   The counterperson welcomes you and awaits your response...`,
-  //{counterperson, pizza},
+  {counterperson, pizza},
   null,
   ["mainst"]
 );
 
 ////////LOOKUP TABLES//////////////
 //these let use search for keywords adding flexibility
-///TODO make lookup table for room alt names
+///TODO make lookup table for room alt names"
 
 const roomNames = {
   'mainst': mainst,
@@ -217,7 +223,7 @@ const roomNames = {
   'upstairs': upstairs,
   'bathroom': bathroom,
   'classroom': classroom,
-  'mrMikes': mrMikes
+  'mrmikes': mrmikes
 }
 
 const altRoomName = {
@@ -234,7 +240,7 @@ const altRoomName = {
   ],
   balcony: ["roof", "fire escape"],
   classroom: ["class room", "class", "room", "Burlington Code Academy"],
-  mrMikes: [
+  mrmikes: [
     "pizza shop",
     "mr. mikes",
     "Mr. Mikes",
@@ -245,7 +251,7 @@ const altRoomName = {
     "Mr Mike"
   ]
 };
-const arrIgnor= ["a", "the", "to", "and"]
+const arrIgnor= ["a", "the", "to", "and","at"]
 
 const acceptbleCommands = {
   move: ["go", "move", "walk", "head", "proceed", "continue"],
@@ -280,7 +286,7 @@ const roomLookup = {
   bathroom: bathroom,
   balcony: balcony,
   classroom: classroom,
-  mrMikes: mrMikes
+  mrmikes: mrmikes
 };
 
 ////USER////////
@@ -356,10 +362,16 @@ let user = {
     },
     look(input) {
       // observe or inspect room or item in room inventory
+      console.log(input+"!!!")
+      if (input===""){
+        console.log("You scan the room and see a... ");
+        Object.values(roomLookup[user.currentRoom].roomInventory).forEach(obj => {
+        console.log(obj.name+":");
+        console.log(obj.description);
+        }
+        )};
       let found = undefined;
       Object.values(roomLookup[user.currentRoom].roomInventory).forEach(obj => {
-       // console.log( "You scan the room and see... " + "\n" + obj.name);
-        //console.log(obj.description);
         found = obj.altNames.find(item => item === input);
         if (found) {
           roomLookup[user.currentRoom].roomInventory[obj.name] = obj;
@@ -375,7 +387,11 @@ let user = {
     
     checkIventory() {
       //TODO if inventory is empty print "you are carrying nothing"
-      user.inventory.forEach(item => {
+      if (user.inventory==={}){
+        console.log("You aren't carrying anything")
+        action();
+      }
+      Object.values(user.inventory).forEach(item => {
         console.log(`You are carrying:\n${item.name}:\n${item.description}\n`); //prints everything in user inventory with descriptions
       });
     },
