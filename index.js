@@ -16,6 +16,7 @@ function ask(questionText) {
 //make a story and fill out the world with objects and discriptions so it is more alive
 //bug where "you are..." is printed twice when upstirs, no idea why
 //spellcheck
+//move functions out of user and puzzles dosent feel nessasary ro have them nested
 
 class Room {
   //lets us make new room objects with <new>, fill out each section in order separated by commas
@@ -67,6 +68,7 @@ let puzzles = {
           console.log(
             "Success! In exchange for the meth, the counterperson gives you a slice of pizza."
           );
+          user.inventory.pizza = pizza;
           action();
         }
       });
@@ -77,9 +79,10 @@ let puzzles = {
     }
     console.log("he doesn't want that");
     action();
+  },
+  noPuzzle: function noPuzzle(){
+    console.log("you cant do that here")
   }
-
-  // when 'activating' counterperson, PC is unable to get pizza without giving meth
 };
 
 ///things////
@@ -94,7 +97,14 @@ let meth = new Thing(
 
 let sevenDays = new Thing(
   "sevendays",
-  ["sevendays", "seven days", "tabloid", "old persons iphone", "news paper"],
+  [
+    "sevendays",
+    "seven days",
+    "tabloid",
+    "old persons iphone",
+    "news paper",
+    "paper"
+  ],
   "A copy of Seven Days, Vermont's Alt-Weekly",
   "You pick up the paper and leaf through it looking for comics and ignoring the articles, just like everybody else does.",
   true
@@ -126,7 +136,7 @@ let bobsHat = new Thing(
 let connor = new Thing(
   "connor",
   ["Connor mcginnis", "classmate"],
-  "Your classmate, Connor.",
+  "Your classmate, Connor. he doesnt want to talk",
   "Connor questions your motives.",
   false
 );
@@ -149,8 +159,8 @@ let pizza = new Thing(
 let counterperson = new Thing(
   "counterperson",
   ["counterperson", "person", "dude"],
-  "guy",
-  "you cant take the guy",
+  "he is ugly",
+  "You cant take the guy, stealing people is wrong.",
   false
 );
 let bike = new Thing("bike", ["bike"], "its a bike", "don't steal", false);
@@ -158,16 +168,25 @@ let sink = new Thing(
   "sink",
   ["sink"],
   "its a sink",
-  "you cant take the sink",
+  "You cant take the sink, people use that!",
   false
 );
 let rail = new Thing(
   "rail",
   ["rail"],
-  " its a rail",
-  "you cant take the rail",
+  " Its a rail",
+  "You cant take the rail, it's bolted to the wall.",
   false
 );
+
+let Joshua = new Thing(
+  "Josh",
+  ["Joshua"],
+  "It's your instructor, Joshua",
+  "You cannot take Joshua.",
+  false
+);
+
 ////rooms/////
 
 let mainst = new Room(
@@ -179,30 +198,27 @@ On the door is a handwritten sign.\n`,
   puzzles.keyCode,
   ["mrmikes"]
 );
-// after entering keyCode, PC enters the foyer
+
 let foyer = new Room(
   `Foyer.`,
   `You find yourself in the stairwell- or "foyer" as it is known in some cultures. 
 As you think of the word "foyer" you smile to yourself and compliment your refined cultural pallete, "Go, me!" you think. 
-Taking a mental inventory of your surroundings, you notice a copy of the 'Seven Days' newspaper folded up in the corner`,
+Taking a mental inventory of your surroundings, you notice a copy of the 'Seven Days' newspaper folded up in the corner. In front of you is the staircase leading upstairs.`,
   { sevenDays, rail },
-  null,
+  puzzles.noPuzzle,
   ["mainst", "upstairs"]
 );
-// assuming PC has grabbed the newspaper, they have the choice to head upstairs
 
-// from the foyer, PC has the option to walk upstairs- this is the path to progression. PC can go back outside, but that'd be silly.
 let upstairs = new Room(
   `Upstairs.`,
   `You are at the top of the stairwell facing the balcony door, 
-the bathroom door to your right, and to your right is the Burlington Code Academy classroom. Through the window of the balcony door, you see somebody puffing their Juul outside.`,
+the bathroom door to your right, and to your right is the Burlington Code Academy classroom. Through the window of the balcony door, you see somebody puffing their Juul outside.
+Somebody rode their bike to class and left it resting against the wall next to you.`,
   { bike },
-  null,
+  puzzles.noPuzzle,
   ["bathroom", "classroom", "balcony", "foyer"]
 );
-// from here, PC can either walk through balcony door, enter bathroom, or go to classroom. All 3 are different and unique Room.
 
-// going to the bathroom will yield a dead-end at this time. the only available action is to 'go back' to 'upstairs'
 let bathroom = new Room(
   `Bathroom.`,
   `You decide to head into the bathroom for reasons unknown to anyone other than yourself. 
@@ -211,10 +227,9 @@ The door doesn't budge. This room is in use.
 You hear an affirming grunt on the other side of the door. 
 Best to walk away now...`,
   { sink },
-  null,
+  puzzles.noPuzzle,
   ["upstairs"]
 );
-
 
 let balcony = new Room(
   `Balcony.`,
@@ -222,18 +237,17 @@ let balcony = new Room(
 You are standing outside. Your classmate Connor is puffing on his Juul. 
 You notice TA Bob's hat laying on the ground...`,
   { bobsHat, connor },
-  null,
+  puzzles.noPuzzle,
   ["upstairs"]
 );
-
 
 let classroom = new Room(
   `Classroom.`,
   `You open the door to the classroom and walk in. 
-You are standing in the classroom.
+You are standing in the classroom. The chair nearest the door is empty.
 Joshua is presenting a lecture to the class...`,
-  { chair },
-  null,
+  { chair, Joshua },
+  puzzles.noPuzzle,
   ["upstairs"]
 );
 
@@ -241,7 +255,7 @@ let mrmikes = new Room(
   `Mr. Mikes`,
   `You walk down the street heading east towards VCET.
   You arrive at the entrace to Mr. Mikes Pizza and walk in.
-  The thick aroma of gluten and mozzarella fills your nostrils as you walk up to the counter.
+  The thick aroma of gluten and mozzarella fills your nostrils as you walk up to the counter. You see a slice of pizza warming in the display window.
   The counterperson welcomes you and awaits your response...`,
   { counterperson, pizza },
   puzzles.drugDeal,
@@ -254,7 +268,14 @@ let mrmikes = new Room(
 const altRoomName = {
   mainst: ["street", "front door", "main st", "mainst", " 182 main st"],
   foyer: ["vestibule", "entrance", "doorway", "lobby", "foyer"],
-  upstairs: ["hallway", "landing", "top floor", "upstairs", "up stairs","stairs"],
+  upstairs: [
+    "hallway",
+    "landing",
+    "top floor",
+    "upstairs",
+    "up stairs",
+    "stairs"
+  ],
   bathroom: [
     "bath room",
     "toilet",
@@ -288,11 +309,11 @@ const arrIgnor = ["a", "the", "to", "and", "at"];
 const acceptbleCommands = {
   move: ["go", "move", "walk", "head", "proceed", "continue", "cd"],
   take: ["take", "pick up", "grab"],
-  activateExternal: ["open", "read"], ///TODO add more fuctions and adding a list of actions each iten can do to each item object
-  look: ["look", "inspect", "examine"],
+  activateExternal: [], ///TODO add more fuctions and adding a list of actions each iten can do to each item object eg READ for books TALK for people
+  look: ["look", "inspect", "examine", "open", "read"],
   checkIventory: ["inventory", "check inventory", "i", "pwd"],
   drop: ["drop"],
-  use: ["use", "talk", "buy","activate"],//TODO sepreate actavating puzzles 
+  use: ["use", "talk", "buy", "activate", "enter"], //TODO sepreate actavating puzzles
   help: ["help"],
   kill: ["kill", "murder"]
 };
@@ -374,7 +395,7 @@ let user = {
             room => room == names[0]
           ); // checks if you can move to desired location. right now names need to be exact. need improvement TODO
           if (found) {
-            user.currentRoom = found; 
+            user.currentRoom = found;
             action();
           }
         }
@@ -408,7 +429,7 @@ let user = {
     },
     checkIventory() {
       if (user.inventory === {}) {
-        console.log("You aren't carrying anything");
+        console.log("You aren't carrying anything.");
         action();
       }
       Object.values(user.inventory).forEach(item => {
@@ -417,7 +438,7 @@ let user = {
     },
     activateExternal(input) {
       if (input === "") {
-        console.log("I dont know what you want me to do");
+        console.log("I dont know what you want me to do.");
         action();
       } else {
         console.log(
@@ -426,12 +447,16 @@ let user = {
       } //looks up description of a thing and prints it best way to tell a story with LOOK
     },
     help() {
-      console.log("\nYou can MOVE, TAKE, DROP, USE, or LOOK"); //TODO prints possible actions needs improvement
+      console.log(
+        "\nYou can MOVE, TAKE, DROP, USE, TALK, or LOOK\nFor example you can USE KEYPAD"
+      ); //TODO prints possible actions needs improvement
     },
-    kill(input){
-      console.log("No! don't do that")
-      if (input ==="self"){
-        console.log("you died")
+    kill(input) {
+      console.log("No! don't do that");
+      if (input === "self") {
+        console.log(
+          "You died. With your character's death, the thread of prophecy is severed. Begin a new game to restore the weave of fate."
+        );
         process.exit();
       }
     }
@@ -440,7 +465,7 @@ let user = {
 ////main function runs game in loop taking user input
 async function action() {
   let input = await ask(
-    `\n You are 1 in ${roomLookup[user.currentRoom].name}\n\n ${
+    `\n You are in ${roomLookup[user.currentRoom].name}\n\n ${
       roomLookup[user.currentRoom].description
     }\n`
   );
